@@ -473,7 +473,7 @@ function logIn(userName, password, res) {
                 res.send({state: 'failed', reason: err});
                 return;
               }
-              res.send({state: 'succeeded', data: {token: token, ttl: ttl, createdAt: Date()}});
+              res.send({state: 'succeeded', data: {token: token, ttl: ttl, createdAt: Date().toISOString()}});
               saveToken(token, userName, function(err) {});
             });
             return;
