@@ -15,7 +15,7 @@ const Token = require('./models/token');
 // Adjusts the Port on which the server listens
 const listenPort = 5555;
 const productName = 'tpXSchool API';
-const version = '0.2 alpha';
+const version = '0.21 alpha';
 
 mongoose.connect('mongodb://tpxschooldb/tpxschool', {
   useNewUrlParser: true,
@@ -102,10 +102,10 @@ app.post('/user/register', function(req, res) {
     if (body.userName && body.password && body.email) {
       createNewUser(body.userName, body.password, body.email, res);
     } else {
-      res.send({state: 'faiiled', reason: 'Not enough data was supplied!'});
+      res.send({state: 'failed', reason: 'Not enough data was supplied!', code: 1});
     }
   } else {
-    res.send({state: 'failed', reason: 'No data was received!'});
+    res.send({state: 'failed', reason: 'No data was received!', code: 2});
   }
 });
 
@@ -116,10 +116,10 @@ app.post('/user/logIn', function(req, res) {
     if (body.userName && body.password) {
       logIn(body.userName, body.password, res);
     } else {
-      res.send({state: 'failed', reason: 'Not enough data was supplied!'});
+      res.send({state: 'failed', reason: 'Not enough data was supplied!', code: 1});
     }
   } else {
-    res.send({state: 'failed', reason: 'No data was received!'});
+    res.send({state: 'failed', reason: 'No data was received!', code: 2});
   }
 });
 
@@ -130,14 +130,14 @@ app.post('/user/logOut', function(req, res) {
     logOut(body.token, res);
     return;
   }
-  res.send({state: 'failed', reason: 'No data was received!'});
+  res.send({state: 'failed', reason: 'No data was received!', code: 2});
 });
 
 app.post('/token/verify', function(req, res) {
   if (req.body.token === null) {
     res.send({
       state: 'failed',
-      reason: 'No token specified!',
+      reason: 'No token specified!', code: 10,
     });
     return;
   }
@@ -154,7 +154,7 @@ app.post('/token/verify', function(req, res) {
     if (user === null) {
       res.send({
         state: 'failed',
-        reason: 'An unknown error ocurred!',
+        reason: 'An unknown error ocurred!', code: 0,
       });
       return;
     }
@@ -177,7 +177,7 @@ app.post('/token/verify', function(req, res) {
 
 app.post('/homework/get', function(req, res) {
   if (req.body.token === null) {
-    res.send({state: 'failed', reason: 'No Token was supplied'});
+    res.send({state: 'failed', reason: 'No Token was supplied', code: 10});
     return;
   }
   verifyToken(req.body.token, (err, user) => {
@@ -185,6 +185,7 @@ app.post('/homework/get', function(req, res) {
       res.send({
         state: 'failed',
         reason: err,
+        code: 11
       });
       return;
     }
@@ -192,6 +193,7 @@ app.post('/homework/get', function(req, res) {
       res.send({
         state: 'failed',
         reason: 'An unknown Error ocurred!',
+        code: 0
       });
       return;
     }
@@ -204,7 +206,7 @@ app.post('/homework/get', function(req, res) {
 
 app.post('/homework/add', (req, res) => {
   if (req.body.token === null) {
-    res.send({state: 'failed', reason: 'No Token was supplied'});
+    res.send({state: 'failed', reason: 'No Token was supplied', code: 10});
     return;
   }
   verifyToken(req.body.token, (err, user) => {
@@ -212,6 +214,7 @@ app.post('/homework/add', (req, res) => {
       res.send({
         state: 'failed',
         reason: err,
+        code: 99,
       });
       return;
     }
@@ -219,6 +222,7 @@ app.post('/homework/add', (req, res) => {
       res.send({
         state: 'failed',
         reason: 'An unknown Error ocurred!',
+        code: 0,
       });
       return;
     }
@@ -232,7 +236,7 @@ app.post('/homework/add', (req, res) => {
         owner: user._id,
       }).save( (err, doc) => {
         if (err) {
-          res.send({state: 'failed', reason: 'Could not save to DB'});
+          res.send({state: 'failed', reason: 'Could not save to DB', code: 20});
           return;
         }
         res.send({state: 'succeeded', data: doc});
@@ -241,6 +245,7 @@ app.post('/homework/add', (req, res) => {
       res.send({
         state: 'failed',
         reason: 'Not enough data was supplied',
+        code: 1,
       });
     }
   });
@@ -248,7 +253,7 @@ app.post('/homework/add', (req, res) => {
 
 app.post('/homework/setDone', (req, res) => {
   if (req.body.token === null) {
-    res.send({state: 'failed', reason: 'No Token was supplied'});
+    res.send({state: 'failed', reason: 'No Token was supplied', code: 10});
     return;
   }
   verifyToken(req.body.token, (err, user) => {
@@ -256,6 +261,7 @@ app.post('/homework/setDone', (req, res) => {
       res.send({
         state: 'failed',
         reason: err,
+        code: 11,
       });
       return;
     }
@@ -263,6 +269,7 @@ app.post('/homework/setDone', (req, res) => {
       res.send({
         state: 'failed',
         reason: 'An unknown Error ocurred!',
+        code: 0,
       });
       return;
     }
@@ -270,6 +277,7 @@ app.post('/homework/setDone', (req, res) => {
       res.send({
         state: 'failed',
         reason: 'No Homework Id was supplied',
+        code: 1,
       });
       return;
     }
@@ -279,6 +287,7 @@ app.post('/homework/setDone', (req, res) => {
         res.send({
           state: 'failed',
           reason: err,
+          code: 99,
         });
         return;
       }
@@ -286,6 +295,7 @@ app.post('/homework/setDone', (req, res) => {
         res.send({
           state: 'failed',
           reason: 'No Homework for that ID found!',
+          code: 30,
         });
         return;
       }
@@ -295,6 +305,7 @@ app.post('/homework/setDone', (req, res) => {
         res.send({
           state: 'failed',
           reason: 'You are not the owner of this document! Incident will be logged',
+          code: 21,
         });
         console.log(`The user with id: ${user._id} tried to access others data!`);
         return;
@@ -305,6 +316,7 @@ app.post('/homework/setDone', (req, res) => {
         res.send({
           state: 'failed',
           reason: 'The Object is already set Done!',
+          code: 31,
         });
         return;
       }
@@ -323,6 +335,7 @@ app.post('/homework/setDone', (req, res) => {
           res.send({
             state: 'failed',
             reason: 'An unknown Error occurred!',
+            code: 0,
           });
         }
       });
@@ -332,7 +345,7 @@ app.post('/homework/setDone', (req, res) => {
 
 app.post('/homework/delete', (req, res) => {
   if (req.body.token === null) {
-    res.send({state: 'failed', reason: 'No Token was supplied'});
+    res.send({state: 'failed', reason: 'No Token was supplied', code: 10});
     return;
   }
   verifyToken(req.body.token, (err, user) => {
@@ -340,6 +353,7 @@ app.post('/homework/delete', (req, res) => {
       res.send({
         state: 'failed',
         reason: err,
+        code: 11,
       });
       return;
     }
@@ -347,6 +361,7 @@ app.post('/homework/delete', (req, res) => {
       res.send({
         state: 'failed',
         reason: 'An unknown Error ocurred!',
+        code: 0,
       });
       return;
     }
@@ -354,6 +369,7 @@ app.post('/homework/delete', (req, res) => {
       res.send({
         state: 'failed',
         reason: 'No Homework Id was supplied',
+        code: 1,
       });
       return;
     }
@@ -363,6 +379,7 @@ app.post('/homework/delete', (req, res) => {
         res.send({
           state: 'failed',
           reason: err,
+          code: 99,
         });
         return;
       }
@@ -370,6 +387,7 @@ app.post('/homework/delete', (req, res) => {
         res.send({
           state: 'failed',
           reason: 'No Homework for that ID found!',
+          code: 30,
         });
         return;
       }
@@ -379,6 +397,7 @@ app.post('/homework/delete', (req, res) => {
         res.send({
           state: 'failed',
           reason: 'You are not the owner of this document! Incident will be logged',
+          code: 21,
         });
         console.log(`The user with id: ${userId} tried to access others data!`);
         return;
@@ -389,6 +408,7 @@ app.post('/homework/delete', (req, res) => {
           res.send({
             state: 'failed',
             reason: err,
+            code: 99,
           });
           return;
         }
@@ -412,20 +432,20 @@ function createNewUser(userName, password, email, res) {
       function(err, obj) {
         if (err) {
         // Check for Error
-          res.send({state: 'failed', reason: err});
+          res.send({state: 'failed', reason: err, code: 99});
           console.err(err);
           return;
         }
         // Check for existing User
         if (obj !== null) {
-          res.send({state: 'failed', reason: 'User already exists!'});
+          res.send({state: 'failed', reason: 'User already exists!', code: 12});
           console.log('User already exists in DB');
           return;
         }
         bcrypt.hash(password, 10, function(err, hash) {
           if (err) {
             console.log('Shit, couldn\'t hash the password!');
-            res.send({state: 'failed', reason: 'The password hasing process failed!'});
+            res.send({state: 'failed', reason: 'The password hasing process failed!', code: 13});
             return;
           }
           const user = new User({
@@ -437,7 +457,7 @@ function createNewUser(userName, password, email, res) {
           user.save(function(err, user) {
             if (err) {
               console.log('Something went wrong, when trying to save the user to db!');
-              res.send({state: 'failed', reason: 'Couldn\'t save user to db!'});
+              res.send({state: 'failed', reason: 'Couldn\'t save user to db!', code: 20});
               return;
             }
             console.log('Successfully saved the user to DB!');
@@ -458,7 +478,7 @@ function logIn(userName, password, res) {
       },
       function(err, obj) {
         if (err) {
-          res.send({state: 'failed', reason: err});
+          res.send({state: 'failed', reason: err, code: 99});
           console.err(err);
         }
 
@@ -470,7 +490,7 @@ function logIn(userName, password, res) {
             jwt.sign({userName: userName}, secret, {expiresIn: `${ttl}s`}, function(err, token) {
               if (err) {
                 console.log(err);
-                res.send({state: 'failed', reason: err});
+                res.send({state: 'failed', reason: err, code: 14});
                 return;
               }
               res.send({state: 'succeeded', data: {token: token, ttl: ttl, createdAt: new Date()}});
@@ -483,7 +503,7 @@ function logIn(userName, password, res) {
             );
           }
         }
-        res.send({state: 'failed', reason: 'Wrong Username or Password'});
+        res.send({state: 'failed', reason: 'Wrong Username or Password', code: 15});
       }
   );
 }
@@ -494,6 +514,7 @@ function logOut(token, res) {
       res.send({
         state: 'failed',
         reason: err,
+        code: 99,
       });
       return;
     }
@@ -501,6 +522,7 @@ function logOut(token, res) {
       res.send({
         state: 'failed',
         reason: 'Token is not existing!',
+        code: 16,
       });
     }
     res.send({
